@@ -21,6 +21,7 @@ const DataInput = () => {
 
   return (
     <div className="mb-6">
+      
       <label htmlFor="data_" className="block text-sm font-medium text-gray-700 mb-1">
         Data Input:
       </label>
@@ -52,7 +53,7 @@ import {
 // Register the required components with Chart.js
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 // components/LineGraph.js
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 
 const LineGraph = () => {
@@ -131,8 +132,55 @@ export default function Home() {
     <div
       className={`${geistSans.variable} ${geistMono.variable} flex items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]`}
     >
+            <InstallBanner />
+
                  <DataForm />
 
     </div>
   );
 }
+
+
+// components/InstallBanner.js
+const InstallBanner = () => {
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault(); // Prevent the mini-info bar from appearing on mobile
+      setDeferredPrompt(e); // Stash the event so it can be triggered later.
+      setIsVisible(true); // Show the banner
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt(); // Show the prompt
+      const { outcome } = await deferredPrompt.userChoice; // Wait for the user's response
+      setIsVisible(false); // Hide the banner after user action
+      setDeferredPrompt(null); // Clear the deferredPrompt
+    }
+  };
+
+  if (!isVisible) return null; // Don't render if not visible
+
+  return (
+    <div className="bg-blue-600 text-white p-4 flex justify-between items-center fixed top-0 left-0 right-0 z-50">
+      <span>Install our app for a better experience!</span>
+      <button 
+        className="bg-white text-blue-600 px-4 py-2 rounded" 
+        onClick={handleInstallClick}
+      >
+        Install
+      </button>
+    </div>
+  );
+};
+
